@@ -42,18 +42,24 @@ import com.qualcomm.robotcore.util.ElapsedTime;
  * See PushbotTeleopTank_Iterative and others classes starting with "Pushbot" for usage examples.
  *
  * This hardware class assumes the following device names have been configured on the robot:
- * Note:  All names are lower case and some have single spaces between words.
+ * Note:  All names are lower case and some have an underscore between words.
  *
- * Motor channel:  Left  drive motor:        "left_drive"
- * Motor channel:  Right drive motor:        "right_drive"
+ * Motor channel:  Left  drive motor:       "left_drive"
+ * Motor channel:  Right drive motor:       "right_drive"
+ * Motor channel:  Lift Left drive motor:   "left_lift"
+ * Motor channel:  Lift Right drive motor:  "right_lift"
+ * Servo channel:  Servo to place marker:   "servo"
  */
 public class HardwarePushbotLocal
 {
     /* Public OpMode members. */
     public DcMotor  leftDrive   = null;
     public DcMotor  rightDrive  = null;
+    public DcMotor  leftLift    = null;
+    public DcMotor  rightLift   = null;
+    public Servo    claimServo  = null;
 
-    public static final double MID_SERVO       =  0.5 ;
+    public static final double INIT_SERVO       =  0.0 ;
 
     /* local OpMode members. */
     HardwareMap hwMap           =  null;
@@ -74,10 +80,15 @@ public class HardwarePushbotLocal
         rightDrive = hwMap.get(DcMotor.class, "right_drive");
         leftDrive.setDirection(DcMotor.Direction.FORWARD); // Set to REVERSE if using AndyMark motors
         rightDrive.setDirection(DcMotor.Direction.REVERSE);// Set to FORWARD if using AndyMark motors
+        
+        leftLift    = hwMap.get(DcMotor.class, "left_lift");
+        rightLift   = hwMap.get(DcMotor.class, "right_lift");
 
         // Set all motors to zero power
         leftDrive.setPower(0);
         rightDrive.setPower(0);
+        leftLift.setPower(0);
+        rightLift.setPower(0);
 
         // Set all motors to run without encoders.
         // May want to use RUN_USING_ENCODERS if encoders are installed.
@@ -85,9 +96,15 @@ public class HardwarePushbotLocal
         // rightDrive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        leftLift.setMode(DcMotor.RunMode.RUN_USING_ENCODER);    // Only one lift motor has encoder
+        leftLift.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
 
 
         // Define and initialize ALL installed servos.
+        claimServo = hwMap.get(Servo.class, "servo");
+        claimServo.setPosition(INIT_SERVO);
+
     }
  }
 
