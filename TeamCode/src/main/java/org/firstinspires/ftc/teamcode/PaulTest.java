@@ -37,7 +37,12 @@ public class PaulTest extends LinearOpMode {
     static final double DRIVE_SPEED = 0.5;
     static final double TURN_SPEED = 0.3;
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
+                                          (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double deployServoPosition = 0.75;
+    static final double resetServoPosition = 0;
+    static final double liftPower = 0.4;
+    static boolean touchState = true;
+    static int down = -1;   // Reverses direction of motors to lower lift
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -90,20 +95,49 @@ public class PaulTest extends LinearOpMode {
 
         // Start autonomous actions here
 
-        // TODO: Raise lift to max
-        //       Integreate code in from OnBotLiftArmTest.java.
+        // ACTION 1:
+        // Raise lift to max
+        touchState = robot.digitalTouch.getState();
+        while ( opModeIsActive() && touchState == true ) {
+            robot.leftLift.setPower(liftPower);
+            robot.rightLift.setPower(-liftPower);
+            touchState = robot.digitalTouch.getState();
+            telemetry.addData("Touch Sensor", touchState );
+            telemetry.update();
+        }
+        
+        // Turn off lift motors
+        robot.leftLift.setPower(0);
+        robot.rightLift.setPower(0);
 
-        // TODO: Back up 6 inches from lander (doesn't need gyro)
-        // encoderDrive(DRIVE_SPEED,  -8,  -8, 3.0);  // S1: Backwards 8 Inches with 3 Sec timeout
+sleep(500);
 
-        // TODO: Lower lift (? If this takes too long maybe lift can stay up and lowered in teleop)
+        // ACTION 2:
+        // Back up 4 inches from lander (doesn't need gyro)
+        // encoderDrive(DRIVE_SPEED,  -4,  -4, 2.0);  // Backwards X Inches with X Sec timeout
+        encoderDrive(DRIVE_SPEED,  -16,  -16, 2.0);  // Testing
 
-        // TODO: Realign to initial gyro heading (0 ?)
+        // TODO: Lower lift - Lower for 1 second, will not get all the way down
+        runtime.reset();        // reset the timeout time
+        while ( opModeIsActive() && (runtime.seconds() < 1) ) {
+            robot.leftLift.setPower(down * liftPower * 0.7);
+            robot.rightLift.setPower(down * -liftPower * 0.7);
+            telemetry.addData("Lowering lift for", "1 second");
+            telemetry.addData("Timer:", runtime.seconds() );
+            telemetry.update();
+        }
+        
+        // Turn off lift motors
+        robot.leftLift.setPower(0);
+        robot.rightLift.setPower(0);
+
+        // ACTION:  TODO
+        // Realign to initial gyro heading (0 ?)
         //       Rotate to zero
 
-        // TODO: Drive to depot using multiple drive and turn steps
-        //       Build drive path to depot using drive and rotate methods
-        
+        // ACTION:
+        // Drive to depot using multiple drive and rotate steps
+
         // Path: Launch from Crater side
         /**
         encoderDrive(DRIVE_SPEED,  -27,  -27, 4.0);
@@ -121,22 +155,31 @@ public class PaulTest extends LinearOpMode {
         // encoderDrive(DRIVE_SPEED, -53, -53, 6.0);
         sleep(100);
 
-        // TODO: Run servo to place marker
-        //double servoPosition = 0.75;
-        //robot.setPosition(servoPosition);
+        // ACTION:
+        // Run servo to place marker and claim depot
+        robot.markerServo.setPosition(deployServoPosition);
     
-sleep(2000);
+        sleep(100);
 
-        // TODO: Back up X inches to get out of depot
-        encoderDrive(DRIVE_SPEED,  18,  18, 2.0);  // S1: Forwards X Inches with X Sec timeout
+        // ACTION:
+        // Back up (forward from robots perspective) 20 inches to get out of depot
+        // encoderDrive(DRIVE_SPEED,  20,  20, 3.0);  // Forwards X Inches with X Sec timeout
+        encoderDrive(DRIVE_SPEED,  16,  16, 3.0);  // Testing
 
+        // ACTION:
+        // Reset servo to upright position
+        robot.markerServo.setPosition(resetServoPosition);
+        
         // This completes phase 1 goals, make sure above works consistantly before
         // building any additional phase 2 goals
 
         // End autonomous actions here
 
-        telemetry.addData("Path", "Complete");
+        telemetry.addData("Servo Position", robot.markerServo.getPosition());
+        telemetry.addData("Autonomous Path", "Complete");
         telemetry.update();
+        
+        sleep(1000);
     }
     
     public void gyroDrive(double speed,
