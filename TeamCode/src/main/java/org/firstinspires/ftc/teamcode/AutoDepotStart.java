@@ -37,8 +37,8 @@ public class AutoDepotStart extends LinearOpMode {
     static final double DRIVE_SPEED = 0.5;
     static final double TURN_SPEED = 0.3;
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-                                          (WHEEL_DIAMETER_INCHES * 3.1415);
-    static final double deployServoPosition = 0.75;
+            (WHEEL_DIAMETER_INCHES * 3.1415);
+    static final double deployServoPosition = 0.7;
     static final double openLiftLockServoPosition = 0.24;
     static final double resetServoPosition = 0;
     static final double liftPower = 0.4;
@@ -111,7 +111,7 @@ public class AutoDepotStart extends LinearOpMode {
             telemetry.addData("Touch Sensor", touchState );
             telemetry.update();
         }
-        
+
         // Turn off lift motors
         robot.leftLift.setPower(0);
         robot.rightLift.setPower(0);
@@ -131,7 +131,7 @@ public class AutoDepotStart extends LinearOpMode {
             telemetry.addData("Timer:", runtime.seconds() );
             telemetry.update();
         }
-        
+
         // Turn off lift motors
         robot.leftLift.setPower(0);
         robot.rightLift.setPower(0);
@@ -156,13 +156,13 @@ public class AutoDepotStart extends LinearOpMode {
 
         // May want to add longer delay to avoid partner in depot
         // encoderDrive(DRIVE_SPEED, -15, -15, 3.0);
-        
+
         // ACTION:
         // Run servo to place marker and claim depot
         telemetry.addData("Deploy Marker", robot.markerServo.getPosition());
         telemetry.update();
         robot.markerServo.setPosition(deployServoPosition);
-    
+
         sleep(100);
 
         telemetry.addData("Back Up", robot.markerServo.getPosition());
@@ -176,7 +176,7 @@ public class AutoDepotStart extends LinearOpMode {
         // ACTION:
         // Reset servo to upright position
         robot.markerServo.setPosition(resetServoPosition);
-        
+
         // This completes phase 1 goals, make sure above works consistantly before
         // building any additional phase 2 goals
 
@@ -185,27 +185,27 @@ public class AutoDepotStart extends LinearOpMode {
         telemetry.addData("Servo Position", robot.markerServo.getPosition());
         telemetry.addData("Autonomous Path", "Complete");
         telemetry.update();
-        
+
         sleep(1000);
     }
-    
+
     public void gyroDrive(double speed,
                           double leftInches, double rightInches,
                           double timeoutS) {
         /* Drive in a straight line using gyro to maintain heading. */
-        
+
         int newLeftTarget;
         int newRightTarget;
-        
+
         newLeftTarget = robot.leftDrive.getCurrentPosition() + (int)(leftInches * COUNTS_PER_INCH);
         newRightTarget = robot.rightDrive.getCurrentPosition() + (int)(rightInches * COUNTS_PER_INCH);
-        
+
         // reset the timeout time and start motion.
         runtime.reset();
-        
+
         robot.leftDrive.setPower(Math.abs(speed));
         robot.rightDrive.setPower(Math.abs(speed));
-        
+
         /* Stay in while look and keep driving when:
               - OpMode is running AND
               - Timer hasn't expired AND
@@ -214,31 +214,31 @@ public class AutoDepotStart extends LinearOpMode {
          */
         while (opModeIsActive() &&
                 (runtime.seconds() < timeoutS) &&
-                    (robot.leftDrive.getCurrentPosition() < newLeftTarget ||
-                     robot.leftDrive.getCurrentPosition() < newRightTarget)) {
-           
+                (robot.leftDrive.getCurrentPosition() < newLeftTarget ||
+                        robot.leftDrive.getCurrentPosition() < newRightTarget)) {
+
             correction = checkDirection();
-            
+
             robot.leftDrive.setPower(speed + correction);
             robot.rightDrive.setPower(speed);
-           
+
             telemetry.addData("1 imu heading", lastAngles.firstAngle);
             telemetry.addData("2 global heading", globalAngle);
             telemetry.addData("3 correction", correction);
 
             telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
             telemetry.addData("Path2",  "Running at %7d :%7d",
-                        robot.leftDrive.getCurrentPosition(),
-                        robot.rightDrive.getCurrentPosition());
+                    robot.leftDrive.getCurrentPosition(),
+                    robot.rightDrive.getCurrentPosition());
             telemetry.update();
- 
-        }  
+
+        }
 
         robot.leftDrive.setPower(0);
         robot.rightDrive.setPower(0);
 
     }
-    
+
     public void encoderDrive(double speed,
                              double leftInches, double rightInches,
                              double timeoutS) {
@@ -301,7 +301,7 @@ public class AutoDepotStart extends LinearOpMode {
 
         }
     }
-    
+
     /**
      * Resets the cumulative angle tracking to zero.
      */
@@ -338,7 +338,7 @@ public class AutoDepotStart extends LinearOpMode {
         globalAngle += deltaAngle;
 
         lastAngles = angles;
-        
+
         telemetry.addData("Angle is ", globalAngle);
         telemetry.update();
 
@@ -411,20 +411,20 @@ public class AutoDepotStart extends LinearOpMode {
 
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0
-                   && (runtime.seconds() < timeoutS)) {}
+                    && (runtime.seconds() < timeoutS)) {}
 
             while (opModeIsActive() && getAngle() > degrees
-                   && (runtime.seconds() < timeoutS)) {}
+                    && (runtime.seconds() < timeoutS)) {}
         }
         else    // left turn.
             telemetry.addData("Turning", "Left");
-            telemetry.update();
+        telemetry.update();
 
-            while (opModeIsActive() && getAngle() < degrees
-                   && (runtime.seconds() < timeoutS)) {
-                //telemetry.addData("Turning Left",  "Angle is %7d ", getAngle());
-                //telemetry.update();
-            }
+        while (opModeIsActive() && getAngle() < degrees
+                && (runtime.seconds() < timeoutS)) {
+            //telemetry.addData("Turning Left",  "Angle is %7d ", getAngle());
+            //telemetry.update();
+        }
 
         // turn the motors off.
         robot.leftDrive.setPower(0);
@@ -441,7 +441,7 @@ public class AutoDepotStart extends LinearOpMode {
     {
         // TODO: Needs testing!!!!
         // Does not support turning to 0 degrees.  If 0 sent currently does nothing.
-        
+
         double  leftPower, rightPower;
 
         // getAngle() returns + when rotating counter clockwise (left) and - when rotating
@@ -468,17 +468,17 @@ public class AutoDepotStart extends LinearOpMode {
         {
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0
-                   && (runtime.seconds() < timeoutS)) {}
+                    && (runtime.seconds() < timeoutS)) {}
 
             while (opModeIsActive() && getAngle() > degrees
-                   && (runtime.seconds() < timeoutS)) {
+                    && (runtime.seconds() < timeoutS)) {
                 telemetry.addData("Turning", "Right");
                 telemetry.update();
             }
         }
         else    // left turn.
             while (opModeIsActive() && getAngle() < degrees
-                   && (runtime.seconds() < timeoutS)) {
+                    && (runtime.seconds() < timeoutS)) {
                 //telemetry.addData("Turning", "Left");
                 //telemetry.update();
             }
