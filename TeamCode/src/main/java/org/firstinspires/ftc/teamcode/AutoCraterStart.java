@@ -1,4 +1,3 @@
-
 package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
@@ -37,9 +36,9 @@ public class AutoCraterStart extends LinearOpMode {
     static final double DRIVE_SPEED = 0.5;
     static final double TURN_SPEED = 0.3;
     static final double COUNTS_PER_INCH = (COUNTS_PER_MOTOR_REV * DRIVE_GEAR_REDUCTION) /
-            (WHEEL_DIAMETER_INCHES * 3.1415);
+                                          (WHEEL_DIAMETER_INCHES * 3.1415);
     static final double deployServoPosition = 0.7;
-    static final double openLiftLockServoPosition = 0.24;
+    static final double openLiftLockServoPosition = 0.9;
     static final double resetServoPosition = 0;
     static final double liftPower = 0.4;
     static boolean touchState = true;
@@ -95,6 +94,7 @@ public class AutoCraterStart extends LinearOpMode {
         waitForStart();
 
         // Start autonomous actions here
+        // Path: Launch from Crater side
 
         // Action 0:
         // Open lift lock servo
@@ -102,7 +102,7 @@ public class AutoCraterStart extends LinearOpMode {
         sleep(400);
 
         // ACTION 1:
-        // Raise lift to max
+        // Raise lift to max to unlatch
         touchState = robot.digitalTouch.getState();
         while ( opModeIsActive() && touchState == true ) {
             robot.leftLift.setPower(liftPower);
@@ -118,12 +118,11 @@ public class AutoCraterStart extends LinearOpMode {
 
         // ACTION 2:
         // Back up 4 inches from lander (doesn't need gyro)
-        encoderDrive(DRIVE_SPEED,  -4,  -4, 2.0);  // Backwards X Inches with X Sec timeout
-        // encoderDrive(DRIVE_SPEED,  -16,  -16, 2.0);  // Testing
+        encoderDrive(DRIVE_SPEED,  -4,  -4, 2.0);
 
         // TODO: Lower lift - Lower for 1 second, will not get all the way down
         runtime.reset();        // reset the timeout time
-        while ( opModeIsActive() && (runtime.seconds() < 1) ) {
+        while ( opModeIsActive() && (runtime.seconds() < 1.1) ) {
             robot.leftLift.setPower(down * liftPower * 0.7);
             robot.rightLift.setPower(down * -liftPower * 0.7);
             telemetry.addData("Lowering lift for", "1 second");
@@ -139,43 +138,44 @@ public class AutoCraterStart extends LinearOpMode {
         // Realign to initial gyro heading (0 ?)
         //       Rotate to zero
 
-        // ACTION:
+        // ACTION 3:
         // Drive to depot using multiple drive and rotate steps
+        telemetry.addData("Drive to", "Depot");
 
-        // Path: Launch from Crater side
-        encoderDrive(DRIVE_SPEED,  -21,  -21, 4.0);
+        encoderDrive(DRIVE_SPEED,  -21,  -21, 8.0);
         sleep(100);
+        telemetry.addData("Drive to", "Depot - turn 85");
+        telemetry.update();
+
         rotate(85, TURN_SPEED, 4.0);
         sleep(100);
-        encoderDrive(DRIVE_SPEED, -48, -48, 6.0);
+        telemetry.addData("Drive to", "Depot - go 43");
+        telemetry.update();
+
+        encoderDrive(DRIVE_SPEED, -43, -43, 6.0);
         sleep(100);
         rotate(17, TURN_SPEED, 2.0);
         sleep(100);
         // May want to add longer delay to avoid partner in depot
-        encoderDrive(DRIVE_SPEED, -30, -30, 3.0);
+        encoderDrive(DRIVE_SPEED, -34, -34, 3.0);
 
-
-        // Path: Launch from Depot side
-        // encoderDrive(DRIVE_SPEED, -53, -53, 6.0);
         telemetry.addData("Deploy Marker", robot.markerServo.getPosition());
         telemetry.update();
-        // sleep(2000);
 
-        // ACTION:
+        // ACTION 4:
         // Run servo to place marker and claim depot
         robot.markerServo.setPosition(deployServoPosition);
 
-        sleep(100);
+        sleep(200);
 
         telemetry.addData("Back Up", robot.markerServo.getPosition());
         telemetry.update();
-        // sleep(2000);
-        // ACTION:
-        // Back up (forward from robots perspective) 20 inches to get out of depot
-        // encoderDrive(DRIVE_SPEED,  20,  20, 3.0);  // Forwards X Inches with X Sec timeout
-        encoderDrive(DRIVE_SPEED, 20, 20, 3.0);  // Testing
 
-        // ACTION:
+        // ACTION 5:
+        // Go forward X inches and park on crater edge
+        encoderDrive(DRIVE_SPEED, 72, 72, 10.0);
+
+        // ACTION 6:
         // Reset servo to upright position
         robot.markerServo.setPosition(resetServoPosition);
 
@@ -184,17 +184,19 @@ public class AutoCraterStart extends LinearOpMode {
 
         // End autonomous actions here
 
-        telemetry.addData("Servo Position", robot.markerServo.getPosition());
+        // telemetry.addData("Servo Position", robot.markerServo.getPosition());
         telemetry.addData("Autonomous Path", "Complete");
         telemetry.update();
 
-        sleep(1000);
+        sleep(500);
     }
 
     public void gyroDrive(double speed,
                           double leftInches, double rightInches,
                           double timeoutS) {
-        /* Drive in a straight line using gyro to maintain heading. */
+        /* Drive in a straight line using gyro to maintain heading.
+           Needs work, not used in competition.
+        */
 
         int newLeftTarget;
         int newRightTarget;
@@ -207,7 +209,7 @@ public class AutoCraterStart extends LinearOpMode {
 
         robot.leftDrive.setPower(Math.abs(speed));
         robot.rightDrive.setPower(Math.abs(speed));
-        
+
         /* Stay in while look and keep driving when:
               - OpMode is running AND
               - Timer hasn't expired AND
@@ -216,8 +218,8 @@ public class AutoCraterStart extends LinearOpMode {
          */
         while (opModeIsActive() &&
                 (runtime.seconds() < timeoutS) &&
-                (robot.leftDrive.getCurrentPosition() < newLeftTarget ||
-                        robot.leftDrive.getCurrentPosition() < newRightTarget)) {
+                    (robot.leftDrive.getCurrentPosition() < newLeftTarget ||
+                     robot.leftDrive.getCurrentPosition() < newRightTarget)) {
 
             correction = checkDirection();
 
@@ -230,8 +232,8 @@ public class AutoCraterStart extends LinearOpMode {
 
             telemetry.addData("Path1",  "Running to %7d :%7d", newLeftTarget,  newRightTarget);
             telemetry.addData("Path2",  "Running at %7d :%7d",
-                    robot.leftDrive.getCurrentPosition(),
-                    robot.rightDrive.getCurrentPosition());
+                        robot.leftDrive.getCurrentPosition(),
+                        robot.rightDrive.getCurrentPosition());
             telemetry.update();
 
         }
@@ -250,7 +252,7 @@ public class AutoCraterStart extends LinearOpMode {
         // Ensure that the opmode is still active
         if (opModeIsActive()) {
 
-            telemetry.addData("Autonomous", "Ready to Start");
+            //telemetry.addData("Autonomous", "Ready to Start");
             sleep(100);
             telemetry.addData("Inches", leftInches);
             telemetry.addData("Tics/inch", COUNTS_PER_INCH);
@@ -301,7 +303,7 @@ public class AutoCraterStart extends LinearOpMode {
             robot.leftDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
             robot.rightDrive.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-            // sleep(10000);   // pause to view telemetry info
+            // sleep(10000);   // pause to view telemetry info for debugging
         }
     }
 
@@ -414,20 +416,20 @@ public class AutoCraterStart extends LinearOpMode {
 
             // On right turn we have to get off zero first.
             while (opModeIsActive() && getAngle() == 0
-                    && (runtime.seconds() < timeoutS)) {}
+                   && (runtime.seconds() < timeoutS)) {}
 
             while (opModeIsActive() && getAngle() > degrees
-                    && (runtime.seconds() < timeoutS)) {}
+                   && (runtime.seconds() < timeoutS)) {}
         }
         else    // left turn.
             telemetry.addData("Turning", "Left");
-        telemetry.update();
+            telemetry.update();
 
-        while (opModeIsActive() && getAngle() < degrees
-                && (runtime.seconds() < timeoutS)) {
-            //telemetry.addData("Turning Left",  "Angle is %7d ", getAngle());
-            //telemetry.update();
-        }
+            while (opModeIsActive() && getAngle() < degrees
+                   && (runtime.seconds() < timeoutS)) {
+                //telemetry.addData("Turning Left",  "Angle is %7d ", getAngle());
+                //telemetry.update();
+            }
 
         // turn the motors off.
         robot.leftDrive.setPower(0);
